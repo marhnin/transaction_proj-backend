@@ -11,6 +11,16 @@ namespace transaction_projBak.DAL
 {
     public class TransactionService : ITransactionService
     {
+        public List<TransactionDTO> getList(string currency, string fromDate, string toDate, string status)
+        {
+            List<ParameterInfo> parameters = new List<ParameterInfo>();
+            parameters.Add(new ParameterInfo() { ParameterName = "currency", ParameterValue = currency });
+            parameters.Add(new ParameterInfo() { ParameterName = "fromDate", ParameterValue = fromDate });
+            parameters.Add(new ParameterInfo() { ParameterName = "toDate", ParameterValue = toDate });
+            parameters.Add(new ParameterInfo() { ParameterName = "status", ParameterValue = status });
+            return new SqlHelper().GetRecords<TransactionDTO>("pro_find_tb_transactionByParams", parameters);
+        }
+
         public bool InsertData(List<Transaction> tList)
         {
             StringBuilder sqlStr = new StringBuilder();
@@ -29,5 +39,6 @@ namespace transaction_projBak.DAL
             cmd.CommandText = sqlStr.ToString();
             return new SqlHelper().ExecuteQuery(cmd);
         }
+
     }
 }

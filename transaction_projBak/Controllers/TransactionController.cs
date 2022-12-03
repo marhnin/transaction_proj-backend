@@ -40,13 +40,13 @@ namespace transaction_projBak.Controllers
             }
             else
             {
-              if(model.fileType == "csv")
+             List<Transaction> tranList = new List<Transaction>();
+             if (model.fileType == "csv")
               { 
                 byte[] data = Convert.FromBase64String(model.fileUrl);
                 string decodedString = Encoding.UTF8.GetString(data);
                 string[] stringSeparators = new string[] { "\r\n" };
                 string[] lines = decodedString.Split(stringSeparators, StringSplitOptions.None);
-                List<Transaction> tranList = new List<Transaction>();
                 foreach (string s in lines)
                     {
                         MatchCollection matches = new Regex("((?<=\")[^\"]*(?=\"(,|$)+)|(?<=,|^)[^,\"]*(?=,|$))").Matches(s);
@@ -101,32 +101,59 @@ namespace transaction_projBak.Controllers
                         dataFile.Write(bytess, 0, bytess.Length);
                         dataFile.Flush();
                     }
-                    XmlDataDocument xmldoc = new XmlDataDocument();
-                    XmlNodeList xmlnode;
-                    int i = 0;
-                    string str = null;
-                    //FileStream fs = new FileStream(filepath, FileMode.Open, FileAccess.Read);
-                    //xmldoc.Load(fs);
-                    //xmlnode = xmldoc.GetElementsByTagName("Transaction");
                     XmlDocument xmlDoc = new XmlDocument();
                     xmlDoc.Load(filepath);
                     XmlNodeList nodeList = xmlDoc.DocumentElement.SelectNodes("/Transactions/Transaction");
-                    string tranId = "", currencyCode = "", status = "";
-                    decimal amount;
-                    DateTime tranDate;
+                    string transactionId, status, stDate, amt, currencyCode;
+                    Decimal amount;
+                    DateTime transactionDate;
                     foreach (XmlNode node in nodeList)
                     {
-                        tranId = node.Attributes["id"].Value;
-                        status = node.SelectSingleNode("Status").InnerText;
-                        string stDate = node.SelectSingleNode("TransactionDate").InnerText;
-                        SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        tranDate = outputFormat.Parse(stDate);
-                        amount = Convert.ToDecimal(node.SelectSingleNode("PaymentDetails").SelectSingleNode("Amount").InnerText);
-                        currencyCode = node.SelectSingleNode("PaymentDetails").SelectSingleNode("CurrencyCode").InnerText;
+                         transactionId = node.Attributes["id"].Value;
+                         status = node.SelectSingleNode("Status").InnerText;
+                         stDate = node.SelectSingleNode("TransactionDate").InnerText;
+                         amt = node.SelectSingleNode("PaymentDetails").SelectSingleNode("Amount").InnerText;
+                         currencyCode = node.SelectSingleNode("PaymentDetails").SelectSingleNode("CurrencyCode").InnerText;
+                         if ((String.IsNullOrEmpty(transactionId) || String.IsNullOrWhiteSpace(transactionId)) ||
+                            (String.IsNullOrEmpty(status) || String.IsNullOrWhiteSpace(status)) ||
+                            (String.IsNullOrEmpty(stDate) || String.IsNullOrWhiteSpace(stDate)) || 
+                            (String.IsNullOrEmpty(currencyCode) || String.IsNullOrWhiteSpace(currencyCode))||
+                            (String.IsNullOrEmpty(amt) || String.IsNullOrWhiteSpace(amt)))
+                            {
+                                return StatusCode(StatusCodes.Status406NotAcceptable, new Response { Status = "Error", Message = "Invalid record" });
+                            }
+                            else
+                            {
+                                Transaction objTransaction = new Transaction();
+                                SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                                transactionDate = outputFormat.Parse(stDate);
+                                amount = Convert.ToDecimal(amt);
+                                objTransaction.transactionId = transactionId;
+                                objTransaction.amount = amount;
+                                objTransaction.currencyCode = currencyCode;
+                                objTransaction.transactionDate = transactionDate;
+                                objTransaction.status = status;
+                                objTransaction.fileType = (int)FileType.XML;
+                                tranList.Add(objTransaction);
+                        }
+                    }
+                    bool insData = _transactionService.InsertData(tranList);
+                    if (insData)
+                    {
+                        return StatusCode(StatusCodes.Status200OK, new Response { Status = "Success", Message = "Import Success" });
+                    }
+                    else
+                    {
+                        return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "Import Fail" });
                     }
                 }
             }
             return BadRequest();
         }
-    }
+        [HttpGet]
+        [Route("getByParams")]
+        public List<TransactionDTO> getByParams(string currency,string fromDate, string toDate, string status)
+        {
+            
+        }
 }

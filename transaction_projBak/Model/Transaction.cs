@@ -30,5 +30,10 @@ namespace transaction_projBak.Model
         public string Message { get; set; }
     }
     public enum FileType { CSV = 0, XML = 1};
-
+    public class TransactionDTO
+    {
+        public string id { get; set; }
+        public string Status { get; set; }
+        public string payment { get; set; }
+    }
 }
