@@ -24,7 +24,7 @@ namespace transaction_projBak.Controllers
     {
         public readonly ITransactionService _transactionService;
         string filePath;
-       public TransactionController(ITransactionService transactionService, IConfiguration config)
+        public TransactionController(ITransactionService transactionService, IConfiguration config)
         {
             this._transactionService = transactionService;
             filePath = config.GetValue<string>("fileUpload:filepath");
@@ -34,20 +34,20 @@ namespace transaction_projBak.Controllers
         [Route("uploadFile")]
         public IActionResult uploadFileAsync(FileUpload model)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest();
             }
             else
             {
-             List<Transaction> tranList = new List<Transaction>();
-             if (model.fileType == "csv")
-              { 
-                byte[] data = Convert.FromBase64String(model.fileUrl);
-                string decodedString = Encoding.UTF8.GetString(data);
-                string[] stringSeparators = new string[] { "\r\n" };
-                string[] lines = decodedString.Split(stringSeparators, StringSplitOptions.None);
-                foreach (string s in lines)
+                List<Transaction> tranList = new List<Transaction>();
+                if (model.fileType == "csv")
+                {
+                    byte[] data = Convert.FromBase64String(model.fileUrl);
+                    string decodedString = Encoding.UTF8.GetString(data);
+                    string[] stringSeparators = new string[] { "\r\n" };
+                    string[] lines = decodedString.Split(stringSeparators, StringSplitOptions.None);
+                    foreach (string s in lines)
                     {
                         MatchCollection matches = new Regex("((?<=\")[^\"]*(?=\"(,|$)+)|(?<=,|^)[^,\"]*(?=,|$))").Matches(s);
                         if (matches.Count > 5)
@@ -78,7 +78,7 @@ namespace transaction_projBak.Controllers
                         }
                     }
                     bool insData = _transactionService.InsertData(tranList);
-                    if(insData)
+                    if (insData)
                     {
                         return StatusCode(StatusCodes.Status200OK, new Response { Status = "Success", Message = "Import Success" });
                     }
@@ -87,14 +87,14 @@ namespace transaction_projBak.Controllers
                         return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "Import Fail" });
                     }
                 }
-              if(model.fileType == "xml")
+                if (model.fileType == "xml")
                 {
                     var myfilename = string.Format(@"{0}", Guid.NewGuid());
                     if (!Directory.Exists(filePath))
                     {
                         Directory.CreateDirectory(filePath);
                     }
-                    string filepath = filePath +  myfilename + "."+model.fileType;
+                    string filepath = filePath + myfilename + "." + model.fileType;
                     var bytess = Convert.FromBase64String(model.fileUrl);
                     using (var dataFile = new FileStream(filepath, FileMode.Create))
                     {
@@ -109,32 +109,32 @@ namespace transaction_projBak.Controllers
                     DateTime transactionDate;
                     foreach (XmlNode node in nodeList)
                     {
-                         transactionId = node.Attributes["id"].Value;
-                         status = node.SelectSingleNode("Status").InnerText;
-                         stDate = node.SelectSingleNode("TransactionDate").InnerText;
-                         amt = node.SelectSingleNode("PaymentDetails").SelectSingleNode("Amount").InnerText;
-                         currencyCode = node.SelectSingleNode("PaymentDetails").SelectSingleNode("CurrencyCode").InnerText;
-                         if ((String.IsNullOrEmpty(transactionId) || String.IsNullOrWhiteSpace(transactionId)) ||
-                            (String.IsNullOrEmpty(status) || String.IsNullOrWhiteSpace(status)) ||
-                            (String.IsNullOrEmpty(stDate) || String.IsNullOrWhiteSpace(stDate)) || 
-                            (String.IsNullOrEmpty(currencyCode) || String.IsNullOrWhiteSpace(currencyCode))||
-                            (String.IsNullOrEmpty(amt) || String.IsNullOrWhiteSpace(amt)))
-                            {
-                                return StatusCode(StatusCodes.Status406NotAcceptable, new Response { Status = "Error", Message = "Invalid record" });
-                            }
-                            else
-                            {
-                                Transaction objTransaction = new Transaction();
-                                SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                                transactionDate = outputFormat.Parse(stDate);
-                                amount = Convert.ToDecimal(amt);
-                                objTransaction.transactionId = transactionId;
-                                objTransaction.amount = amount;
-                                objTransaction.currencyCode = currencyCode;
-                                objTransaction.transactionDate = transactionDate;
-                                objTransaction.status = status;
-                                objTransaction.fileType = (int)FileType.XML;
-                                tranList.Add(objTransaction);
+                        transactionId = node.Attributes["id"].Value;
+                        status = node.SelectSingleNode("Status").InnerText;
+                        stDate = node.SelectSingleNode("TransactionDate").InnerText;
+                        amt = node.SelectSingleNode("PaymentDetails").SelectSingleNode("Amount").InnerText;
+                        currencyCode = node.SelectSingleNode("PaymentDetails").SelectSingleNode("CurrencyCode").InnerText;
+                        if ((String.IsNullOrEmpty(transactionId) || String.IsNullOrWhiteSpace(transactionId)) ||
+                           (String.IsNullOrEmpty(status) || String.IsNullOrWhiteSpace(status)) ||
+                           (String.IsNullOrEmpty(stDate) || String.IsNullOrWhiteSpace(stDate)) ||
+                           (String.IsNullOrEmpty(currencyCode) || String.IsNullOrWhiteSpace(currencyCode)) ||
+                           (String.IsNullOrEmpty(amt) || String.IsNullOrWhiteSpace(amt)))
+                        {
+                            return StatusCode(StatusCodes.Status406NotAcceptable, new Response { Status = "Error", Message = "Invalid record" });
+                        }
+                        else
+                        {
+                            Transaction objTransaction = new Transaction();
+                            SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            transactionDate = outputFormat.Parse(stDate);
+                            amount = Convert.ToDecimal(amt);
+                            objTransaction.transactionId = transactionId;
+                            objTransaction.amount = amount;
+                            objTransaction.currencyCode = currencyCode;
+                            objTransaction.transactionDate = transactionDate;
+                            objTransaction.status = status;
+                            objTransaction.fileType = (int)FileType.XML;
+                            tranList.Add(objTransaction);
                         }
                     }
                     bool insData = _transactionService.InsertData(tranList);
@@ -152,8 +152,34 @@ namespace transaction_projBak.Controllers
         }
         [HttpGet]
         [Route("getByParams")]
-        public List<TransactionDTO> getByParams(string currency,string fromDate, string toDate, string status)
+        public List<TransactionDTO> getByParams(string currency, string fromDate, string toDate, string status)
         {
-            
+            List<TransactionDTO> tranList =  _transactionService.getList(currency, fromDate, toDate, status);
+            if(tranList.Count <= 0)
+            {
+                return null;
+            }    
+            List<TransactionDTO> rettranList = new List<TransactionDTO>();
+            foreach (TransactionDTO objDto in tranList)
+            {
+                TransactionDTO dto = new TransactionDTO();
+                dto.id = objDto.id;
+                dto.payment = objDto.payment;
+                if (objDto.Status == "Approved")
+                {
+                    dto.Status = "A";
+                }
+                else if(objDto.Status == "Failed" || objDto.Status == "Rejected")
+                {
+                    dto.Status = "R";
+                }
+                else
+                {
+                    dto.Status = "D";
+                }
+                rettranList.Add(dto);
+            }
+            return rettranList;
         }
+    }
 }
