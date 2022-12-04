@@ -1,0 +1,6 @@
+Requirement Environment
+=> Microsoft Sql Server 15
+=> Download the "TransactionDB.bak" and unzip from the main branch.
+=> Import to MSSQL server
+=> Asp.Net core web api (target framework 5.0)
+=> Install libraries from the Manage NuGet packages.
